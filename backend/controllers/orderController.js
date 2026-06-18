@@ -222,9 +222,50 @@ const updateStatus = async (req, res) => {
 // EXPORTS
 // =========================
 //
+// =========================
+// PLACE ORDER (RAZORPAY)
+// =========================
+// NOTE: Razorpay integration was not present in this controller yet.
+// This placeholder prevents runtime import/export crashes.
+// If you add Razorpay SDK logic later, implement it here and set
+// paymentMethod: "Razorpay" and payment: false until verification.
+const placeOrderRazorpay = async (req, res) => {
+  try {
+    const { userId, items, amount, address } = req.body;
+
+    const orderData = {
+      userId,
+      items,
+      amount,
+      address,
+      paymentMethod: "Razorpay",
+      payment: false,
+      date: Date.now(),
+    };
+
+    const newOrder = new orderModel(orderData);
+    await newOrder.save();
+
+    // Return an acknowledgement for now.
+    // Your frontend can be updated to handle this response.
+    res.json({
+      success: true,
+      message: "Order Placed (Razorpay placeholder)",
+      orderId: newOrder._id,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   placeOrder,
   placeOrderStripe,
+  placeOrderRazorpay,
   verifyStripe,
   allOrders,
   userOrders,

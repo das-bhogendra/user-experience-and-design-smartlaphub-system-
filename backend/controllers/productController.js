@@ -1,17 +1,20 @@
 import { v2 as cloudinary } from "cloudinary";
 import productModel from "../models/productModel.js";
 
-// function for adding product
 const addProduct = async (req, res) => {
   try {
     const {
       name,
       description,
       price,
-      category,
-      subCategory,
+      brand,
+      processor,
+      ram,
+      storage,
+      graphics,
+      screenSize,
+      stock,
       bestseller,
-      sizes,
     } = req.body;
 
     const image1 = req.files.image1 && req.files.image1[0];
@@ -23,11 +26,12 @@ const addProduct = async (req, res) => {
       (item) => item !== undefined
     );
 
-    let imagesUrl = await Promise.all(
+    const imagesUrl = await Promise.all(
       images.map(async (item) => {
-        let result = await cloudinary.uploader.upload(item.path, {
+        const result = await cloudinary.uploader.upload(item.path, {
           resource_type: "image",
         });
+
         return result.secure_url;
       })
     );
@@ -35,25 +39,39 @@ const addProduct = async (req, res) => {
     const productData = {
       name,
       description,
-      category,
       price: Number(price),
-      subCategory,
-      bestseller: bestseller === "true" ? true : false,
-      sizes: JSON.parse(sizes.replace(/'/g, '"')),
+
+      brand,
+      processor,
+      ram,
+      storage,
+      graphics,
+      screenSize,
+
+      stock: Number(stock),
+
+      bestseller: bestseller === "true",
+
       image: imagesUrl,
+
       date: Date.now(),
     };
 
     const product = new productModel(productData);
+
     await product.save();
 
-    res.json({ success: true, message: "Product Added" });
+    res.json({
+      success: true,
+      message: "Laptop Added Successfully",
+    });
   } catch (error) {
+    console.log(error);
+
     res.json({
       success: false,
       message: error.message,
     });
-    console.log(error);
   }
 };
 
@@ -108,3 +126,5 @@ const singleProduct = async (req, res) => {
 };
 
 export { listProducts, addProduct, removeProduct, singleProduct };
+
+
