@@ -16,14 +16,58 @@ const ShopContextProvider = ({ children }) => {
   );
 
   // =====================
-  // BACKEND URL (IMPORTANT FIX)
+  // BACKEND URL
   // =====================
   const backendUrl = "http://localhost:5000";
 
   // =====================
-  // CART STATE
+  // CART STATE (IMPORTANT FIXED)
+  // cart = { productId: quantity }
   // =====================
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState({});
+
+  // =====================
+  // ADD TO CART
+  // =====================
+  const addToCart = (productId) => {
+    setCart((prev) => {
+      const updatedCart = { ...prev };
+
+      if (updatedCart[productId]) {
+        updatedCart[productId] += 1;
+      } else {
+        updatedCart[productId] = 1;
+      }
+
+      return updatedCart;
+    });
+  };
+
+  // =====================
+  // REMOVE FROM CART (OPTIONAL BUT USEFUL)
+  // =====================
+  const removeFromCart = (productId) => {
+    setCart((prev) => {
+      const updatedCart = { ...prev };
+
+      if (!updatedCart[productId]) return updatedCart;
+
+      updatedCart[productId] -= 1;
+
+      if (updatedCart[productId] <= 0) {
+        delete updatedCart[productId];
+      }
+
+      return updatedCart;
+    });
+  };
+
+  // =====================
+  // CLEAR CART (OPTIONAL)
+  // =====================
+  const clearCart = () => {
+    setCart({});
+  };
 
   // =====================
   // LOGOUT
@@ -32,26 +76,6 @@ const ShopContextProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem("token");
     navigate("/login");
-  };
-
-  // =====================
-  // ADD TO CART
-  // =====================
-  const addToCart = (item) => {
-    setCart((prev) => {
-      const idx = prev.findIndex((p) => p.id === item?.id);
-
-      if (idx !== -1) {
-        const updated = [...prev];
-        updated[idx] = {
-          ...updated[idx],
-          quantity: (updated[idx].quantity || 1) + 1,
-        };
-        return updated;
-      }
-
-      return [...prev, { ...item, quantity: 1 }];
-    });
   };
 
   // =====================
@@ -64,7 +88,7 @@ const ShopContextProvider = ({ children }) => {
     logout,
 
     // backend
-    backendUrl, // ✅ FIX ADDED
+    backendUrl,
 
     // navigation
     navigate,
@@ -73,6 +97,8 @@ const ShopContextProvider = ({ children }) => {
     cart,
     setCart,
     addToCart,
+    removeFromCart,
+    clearCart,
   };
 
   return (

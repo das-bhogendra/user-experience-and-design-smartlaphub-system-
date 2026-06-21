@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="bg-gray-100 py-20">
       <div className="max-w-6xl mx-auto px-6 text-center">
@@ -10,10 +13,13 @@ const Hero = () => {
         </h1>
 
         <p className="mt-4 text-gray-600 text-lg">
-          Discover premium laptops, accessories, and tech products .
+          Discover premium laptops, accessories, and tech products.
         </p>
 
-        <button className="mt-8 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800">
+        <button
+          onClick={() => navigate("/collection")}
+          className="mt-8 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800"
+        >
           Shop Now
         </button>
 
