@@ -8,6 +8,9 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Delivery from "./pages/delivery";
 import OrderSuccess from "./pages/OrderSuccess";
+import MyOrders from "./pages/MyOrders";
+import OrderTracking from "./pages/OrderTracking";
+import ProductDetails from "./pages/ProductDetails";
 
 const App = () => {
   return (
@@ -19,10 +22,13 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/collection" element={<Collection />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/delivery" element={<Delivery />} />
       <Route path="/confirm" element={<OrderSuccess />} />
+      <Route path="/my-orders" element={<MyOrders />} />
+      <Route path="/order/:id" element={<OrderTracking />} />
 
 
 
@@ -31,6 +37,9 @@ const App = () => {
 };
 
 export default App;
+
+
+
 
 
 

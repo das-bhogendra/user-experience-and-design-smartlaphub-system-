@@ -47,7 +47,8 @@ const OrderSuccess = () => {
           <div className="flex flex-col gap-3">
 
             <button
-              onClick={() => navigate("/orders")}
+              onClick={() => navigate("/my-orders")}
+
               className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
             >
               Track My Order

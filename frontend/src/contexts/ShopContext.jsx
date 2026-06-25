@@ -1,108 +1,89 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ShopContext = createContext(null);
-
+const ShopContext = createContext();
 export const useShop = () => useContext(ShopContext);
 
 const ShopContextProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  // =====================
-  // AUTH STATE
-  // =====================
+  // ================= TOKEN =================
+  // AuthContext stores token under smartlaphub_token.
+  // Keep backward compatibility with older key "token".
   const [token, setToken] = useState(
-    () => localStorage.getItem("token") || null
+    () =>
+      localStorage.getItem("smartlaphub_token") ||
+      localStorage.getItem("token") ||
+      ""
   );
 
-  // =====================
-  // BACKEND URL
-  // =====================
+  useEffect(() => {
+    const storedToken =
+      localStorage.getItem("smartlaphub_token") ||
+      localStorage.getItem("token");
+    if (storedToken) setToken(storedToken);
+  }, []);
+
+
+  // ================= BACKEND =================
   const backendUrl = "http://localhost:5000";
 
-  // =====================
-  // CART STATE (IMPORTANT FIXED)
-  // cart = { productId: quantity }
-  // =====================
+  // ================= CART (IMPORTANT) =================
+  // FORMAT: { productId: quantity }
   const [cart, setCart] = useState({});
 
-  // =====================
-  // ADD TO CART
-  // =====================
+  // ================= ADD TO CART =================
   const addToCart = (productId) => {
     setCart((prev) => {
-      const updatedCart = { ...prev };
-
-      if (updatedCart[productId]) {
-        updatedCart[productId] += 1;
-      } else {
-        updatedCart[productId] = 1;
-      }
-
-      return updatedCart;
+      const updated = { ...prev };
+      updated[productId] = (updated[productId] || 0) + 1;
+      return updated;
     });
   };
 
-  // =====================
-  // REMOVE FROM CART (OPTIONAL BUT USEFUL)
-  // =====================
+  // ================= REMOVE =================
   const removeFromCart = (productId) => {
     setCart((prev) => {
-      const updatedCart = { ...prev };
+      const updated = { ...prev };
+      if (!updated[productId]) return updated;
 
-      if (!updatedCart[productId]) return updatedCart;
+      updated[productId] -= 1;
+      if (updated[productId] <= 0) delete updated[productId];
 
-      updatedCart[productId] -= 1;
-
-      if (updatedCart[productId] <= 0) {
-        delete updatedCart[productId];
-      }
-
-      return updatedCart;
+      return updated;
     });
   };
 
-  // =====================
-  // CLEAR CART (OPTIONAL)
-  // =====================
-  const clearCart = () => {
-    setCart({});
-  };
+  // ================= CLEAR =================
+  const clearCart = () => setCart({});
 
-  // =====================
-  // LOGOUT
-  // =====================
+  // ================= LOGOUT =================
   const logout = () => {
-    setToken(null);
+    // remove both possible keys
+    localStorage.removeItem("smartlaphub_token");
     localStorage.removeItem("token");
+    setToken("");
     navigate("/login");
   };
 
-  // =====================
-  // CONTEXT VALUE
-  // =====================
-  const value = {
-    // auth
-    token,
-    setToken,
-    logout,
-
-    // backend
-    backendUrl,
-
-    // navigation
-    navigate,
-
-    // cart
-    cart,
-    setCart,
-    addToCart,
-    removeFromCart,
-    clearCart,
-  };
 
   return (
-    <ShopContext.Provider value={value}>
+    <ShopContext.Provider
+      value={{
+        backendUrl,
+        token,
+        setToken,
+        navigate,
+
+        cart,
+        setCart,
+        addToCart,
+        removeFromCart,
+        clearCart,
+
+        logout,
+      }}
+    >
       {children}
     </ShopContext.Provider>
   );
