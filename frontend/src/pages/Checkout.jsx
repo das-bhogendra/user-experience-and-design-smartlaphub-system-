@@ -1,20 +1,34 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useShop } from "../contexts/ShopContext";
 import axios from "axios";
-import Navbar from "../components/Navbar/Navbar"; // Capitalized component name
+import Navbar from "../components/Navbar/Navbar"; 
 import Footer from "../components/Footer/Footer";
+
 
 const Checkout = () => {
   const { cart, backendUrl, token, navigate, setCart } = useShop();
+
+  // Fetch products here so Order Summary always has correct product details.
+  const [allProducts, setAllProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/api/product/list`);
+        if (res?.data?.success) setAllProducts(res.data.products || []);
+      } catch (e) {
+        console.error("Failed to fetch products:", e);
+      }
+    };
+    fetchProducts();
+  }, [backendUrl]);
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const authToken = token || localStorage.getItem("smartlaphub_token");
 
-
   // Form Fields State
-
   const [formData, setFormData] = useState({
     firstName: "John",
     lastName: "Doe",
@@ -24,17 +38,53 @@ const Checkout = () => {
   });
 
   // Payment Method State
-  const [paymentMethod, setPaymentMethod] = useState("card"); // 'card', 'esewa', 'khalti'
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-  });
+  // 'cod' for Cash on Delivery, 'card' for Stripe Debit/Credit
+  const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  // Calculate Subtotal, Tax, and Grand Total
-  const subtotal = Array.isArray(cart)
-    ? cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    : 185000; // Fallback fallback to image value for illustration if cart is empty
+  // Card details UI is intentionally not implemented here because Stripe is handled
+  // by redirecting to a Checkout Session created on the backend.
+  // (Keeping this state previously caused confusion with “hardcoded” order summary.)
+  // const [cardDetails, setCardDetails] = useState({
+  //   cardNumber: "",
+  //   expiryDate: "",
+  //   cvv: "",
+  // });
+
+  // Helpers to handle both cart shapes:
+  // 1) Array: [{ productId, price, quantity, ... }]
+  // 2) Object map: { [productId]: quantity }
+  const cartItemsArray = Array.isArray(cart)
+    ? cart
+    : Object.keys(cart || {}).map((itemId) => ({
+        productId: itemId,
+        quantity: cart[itemId],
+      }));
+
+  // Calculate Subtotal, Tax, and Grand Total (always from current cart state)
+  // If `products` isn't loaded yet, use a safe numeric fallback from cart payload.
+  const subtotal = cartItemsArray.reduce((sum, item) => {
+    const product = allProducts?.find((p) => p._id === item.productId);
+
+    // Priority:
+    // 1) item.price (if present and numeric)
+    // 2) product.price (from fetched allProducts)
+    // 3) 0
+    const unitPrice =
+      typeof item.price === "number" && !Number.isNaN(item.price)
+        ? item.price
+        : typeof product?.price === "number" && !Number.isNaN(product.price)
+          ? product.price
+          : 0;
+
+    return sum + unitPrice * Number(item.quantity || 0);
+  }, 0);
+
+
+  // Recompute grand total from the subtotal we actually show.
+  // (Prevents UI mismatch when subtotal can't be computed yet.)
+
+
+
 
   const shippingFee = 500;
   const taxRate = 0.13; // VAT 13%
@@ -45,54 +95,81 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCardChange = (e) => {
-    setCardDetails({ ...cardDetails, [e.target.name]: e.target.value });
-  };
-
   const placeOrder = async () => {
     setLoading(true);
     setErrorMessage("");
 
     try {
-      const orderData = {
-        items: cart,
-        amount: grandTotal,
-        address: formData,
-        paymentMethod,
-        cardDetails: paymentMethod === "card" ? cardDetails : null,
-      };
-
-
       if (!authToken) {
         setErrorMessage("Please login to place your order.");
         return;
       }
 
+      // ==========================================
+      // १. CASH ON DELIVERY (COD) FLOW
+      // ==========================================
+      if (paymentMethod === "cod") {
+        const res = await axios.post(
+          `${backendUrl}/api/order/place`,
+          {
+            items: cart,
+            amount: grandTotal,
+            address: formData,
+          },
+          { headers: { token: authToken } }
+        );
 
-      const res = await axios.post(
-
-        `${backendUrl}/api/order/place`,
-        {
-          items: cart,
-          amount: grandTotal,
-          address: formData,
-        },
-        { headers: { token: authToken } }
-      );
-
-
-
-
-
-      if (res?.data?.success) {
-        alert("Order processed successfully!");
-        setCart({});
-        localStorage.removeItem("cart");
-        navigate("/delivery");
-
-      } else {
-        setErrorMessage(res?.data?.message || "Order failed. Please try again.");
+        if (res?.data?.success) {
+          alert("Order processed successfully!");
+          setCart({});
+          localStorage.removeItem("cart");
+          navigate("/delivery");
+        } else {
+          setErrorMessage(
+            res?.data?.message || "Order failed. Please try again."
+          );
+        }
+        return;
       }
+
+      // ==========================================
+      // २. STRIPE DEBIT/CREDIT CARD FLOW (FIXED)
+      // ==========================================
+      if (paymentMethod === "card") {
+        // Convert cart object map => items array (backend expects array)
+        const stripeItemsArray = cartItemsArray.map((it) => {
+            const productData = allProducts?.find((p) => p._id === it.productId);
+            return {
+              productId: it.productId,
+              quantity: it.quantity,
+              name: productData ? productData.name : "Electronic Product",
+              price: productData ? productData.price : it.price,
+            };
+          });
+
+        const res = await axios.post(
+          `${backendUrl}/api/order/stripe`,
+          {
+            items: stripeItemsArray, // यहाँ अब शुद्ध Array पठाइएको छ
+            amount: grandTotal,
+            address: formData,
+          },
+          { headers: { token: authToken } }
+        );
+
+        if (res?.data?.success && res?.data?.session_url) {
+          // Stripe को सुरक्षित पेमेन्ट गेटवे पेजमा रिडाइरेक्ट गर्ने
+          window.location.href = res.data.session_url;
+        } else {
+          setErrorMessage(
+            res?.data?.message ||
+              "Stripe session creation failed. Check backend console for details."
+          );
+        }
+        return;
+      }
+
+      setErrorMessage("Please select a valid payment method.");
     } catch (error) {
       console.error("Order submission failed:", error);
       setErrorMessage(
@@ -104,17 +181,14 @@ const Checkout = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col justify-between">
       <Navbar />
 
       <main className="max-w-6xl mx-auto w-full px-4 py-8 flex-grow">
-
         {/* Progress Tracker Steps */}
         <div className="flex items-center justify-center max-w-xl mx-auto mb-10 relative">
           <div className="absolute top-4 left-0 right-0 h-0.5 bg-blue-100 -z-10" />
-          
           <div className="flex flex-col items-center flex-1">
             <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm shadow">1</div>
             <span className="text-xs font-bold mt-1 text-black">Shipping</span>
@@ -135,16 +209,13 @@ const Checkout = () => {
 
         {/* Main Grid Checkout content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
           {/* Left Columns - Address & Payment Forms */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* Shipping Address Container */}
             <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
               <h2 className="text-lg font-bold flex items-center gap-2 mb-6">
                 <span className="text-sm">🚚</span> Shipping Address
               </h2>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-slate-500 block mb-1">First Name</label>
@@ -205,8 +276,20 @@ const Checkout = () => {
                 <span className="text-sm">💳</span> Payment Method
               </h2>
 
-              {/* Tabs Container */}
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cod")}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all ${
+                    paymentMethod === "cod"
+                      ? "border-black bg-black/5 text-black ring-1 ring-black"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="text-lg mb-1">💵</span>
+                  Cash on Delivery
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("card")}
@@ -217,87 +300,21 @@ const Checkout = () => {
                   }`}
                 >
                   <span className="text-lg mb-1">💳</span>
-                  Credit/Debit Card
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("esewa")}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all ${
-                    paymentMethod === "esewa"
-                      ? "border-green-600 bg-green-50/50 text-green-700 ring-1 ring-green-500"
-                      : "border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="w-6 h-6 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold mb-1">e</span>
-                  eSewa Wallet
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("khalti")}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all ${
-                    paymentMethod === "khalti"
-                      ? "border-purple-800 bg-purple-50/50 text-purple-900 ring-1 ring-purple-800"
-                      : "border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="w-6 h-6 rounded-full bg-purple-800 text-white text-[10px] flex items-center justify-center font-bold mb-1">K</span>
-                  Khalti Digital
+                  Debit/Credit Card (Stripe)
                 </button>
               </div>
 
-              {/* Card Inputs Conditionally Rendered or Grayed Out */}
               {paymentMethod === "card" ? (
-                <div className="space-y-4 border-t border-slate-100 pt-6">
-                  <div className="relative">
-                    <label className="text-xs font-medium text-slate-500 block mb-1">Card Number</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        name="cardNumber"
-                        placeholder="0000 0000 0000 0000"
-                        value={cardDetails.cardNumber}
-                        onChange={handleCardChange}
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm pr-10"
-                      />
-                      <span className="absolute right-3 top-3 text-slate-400">🔒</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Expiry Date</label>
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        placeholder="MM/YY"
-                        value={cardDetails.expiryDate}
-                        onChange={handleCardChange}
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">CVV</label>
-                      <input
-                        type="password"
-                        name="cvv"
-                        placeholder="***"
-                        maxLength={3}
-                        value={cardDetails.cvv}
-                        onChange={handleCardChange}
-                        className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
-                      />
-                    </div>
-                  </div>
+                <div className="border-t border-slate-100 pt-6 text-center py-4 text-sm text-slate-700">
+                  Your payment will be securely processed by Stripe.
                 </div>
               ) : (
                 <div className="border-t border-slate-100 pt-6 text-center py-4 text-sm text-slate-500">
-                  You will be redirected to securely complete your payment via your selected gateway.
+                  Pay with cash when your order arrives.
                 </div>
               )}
             </div>
 
-            {/* Security Notice */}
             <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex gap-3 text-xs text-blue-700">
               <span className="text-sm mt-0.5">🛡️</span>
               <p>Your payment information is processed securely with 256-bit SSL encryption. We never store your full card details.</p>
@@ -308,33 +325,69 @@ const Checkout = () => {
           <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm space-y-6">
             <h2 className="text-lg font-bold">Order Summary</h2>
 
-            {/* Product Mapping List */}
-            <div className="space-y-4 max-h-60 overflow-y-auto pr-1">
-              {Array.isArray(cart) && cart.length > 0 ? (
-                cart.map((item, index) => (
-                  <div key={index} className="flex gap-3 items-center">
-                    <img
-                      src={item.image || "https://via.placeholder.com/60"}
-                      alt={item.name}
-                      className="w-14 h-14 object-cover rounded-lg border border-slate-100 bg-slate-50"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-slate-800 truncate">{item.name}</h4>
-                      <p className="text-xs text-slate-500 font-medium">Qty: {item.quantity}</p>
-                      <p className="text-xs font-bold text-slate-700 mt-0.5">NPR {item.price.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))
+            <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
+
+              {cartItemsArray.length === 0 ? (
+                <p className="text-center text-gray-500">Your cart is empty.</p>
               ) : (
-                /* Static item template matching placeholder mock image */
-                <div className="flex gap-3 items-center">
-                  <div className="w-14 h-14 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-xs p-1">💻</div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-slate-800 truncate">ProBook Ultra X1</h4>
-                    <p className="text-xs text-slate-500 font-medium">Qty: 1</p>
-                    <p className="text-xs font-bold text-slate-700 mt-0.5">NPR 185,000</p>
-                  </div>
-                </div>
+                cartItemsArray.map(({ productId, quantity }) => {
+                  const item = allProducts?.find((p) => p._id === productId);
+
+                  if (!item) return null;
+
+                  const qty = quantity;
+                  const itemTotal = item.price * qty;
+
+                  return (
+                    <div
+                      key={item._id}
+                      className="border rounded-xl p-3 bg-gray-50"
+                    >
+                      <div className="flex gap-3">
+                        <img
+                          src={item.image?.[0]}
+                          alt={item.name}
+                          className="w-24 h-24 rounded-lg object-cover border"
+                        />
+
+                        <div className="flex-1">
+                          <h3 className="font-bold text-sm">{item.name}</h3>
+
+                          <p className="text-xs text-gray-500">Brand: {item.brand}</p>
+                          <p className="text-xs text-gray-500">Category: {item.category}</p>
+                          <p className="text-xs text-gray-500">Processor: {item.processor}</p>
+                          <p className="text-xs text-gray-500">RAM: {item.ram}</p>
+                          <p className="text-xs text-gray-500">Storage: {item.storage}</p>
+
+                          {item.graphics && (
+                            <p className="text-xs text-gray-500">
+                              Graphics: {item.graphics}
+                            </p>
+                          )}
+
+                          <p className="text-xs text-gray-500">Screen: {item.screenSize}</p>
+
+                          <hr className="my-2" />
+
+                          <div className="flex justify-between text-sm">
+                            <span>Unit Price</span>
+                            <span>NPR {item.price.toLocaleString()}</span>
+                          </div>
+
+                          <div className="flex justify-between text-sm">
+                            <span>Quantity</span>
+                            <span>{qty}</span>
+                          </div>
+
+                          <div className="flex justify-between font-bold text-blue-600 mt-2">
+                            <span>Item Total</span>
+                            <span>NPR {itemTotal.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
 
@@ -358,7 +411,7 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Interactive Flow Action Controls */}
+            {/* Action Buttons */}
             <div className="space-y-3 pt-2">
               {errorMessage ? (
                 <div className="w-full bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
@@ -374,7 +427,7 @@ const Checkout = () => {
                   loading ? "opacity-60 cursor-not-allowed hover:bg-black" : "hover:bg-slate-800"
                 }`}
               >
-                {loading ? "Processing..." : "Proceed to Delivery"}
+                {loading ? "Processing..." : paymentMethod === "card" ? "Pay Now with Stripe" : "Place Order (COD)"}
               </button>
 
               <button
@@ -386,16 +439,14 @@ const Checkout = () => {
               </button>
             </div>
 
-            {/* Trust Marks icons footer */}
             <div className="flex justify-center items-center gap-4 text-slate-400 text-xs pt-2">
-              <span title="Secure Checkout">🛡️ Secure</span>
+              <span>🛡️ Secure</span>
               <span>•</span>
-              <span title="Buyer Protection">🔒 Verified</span>
+              <span>🔒 Verified</span>
               <span>•</span>
-              <span title="Privacy Certified">⚙️ Encrypted</span>
+              <span>⚙️ Encrypted</span>
             </div>
           </div>
-
         </div>
       </main>
 
@@ -405,3 +456,6 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+
+

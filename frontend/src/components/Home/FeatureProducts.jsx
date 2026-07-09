@@ -1,36 +1,37 @@
 import React from "react";
-
+import laptop2 from "../../assets/images/products/laptop2.png";
+import laptop7 from "../../assets/images/products/laptop7.avif";
+import laptop9 from "../../assets/images/products/laptop9.avif";
+import laptop8 from "../../assets/images/products/laptop8.avif";
+import gaming from "../../assets/images/products/laptopgaming.png";
 const FeatureProducts = () => {
   const products = [
     {
       id: 1,
-      name: "Premium Headphones",
-      price: "$120",
-      image:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+      name: "Dell XPS 13 Laptop",
+      price: "Rs 1200",
+      image:laptop7
     },
     {
       id: 2,
-      name: "Smart Watch",
-      price: "$199",
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
+      name: "Dell Inspiron 15 Laptop",
+      price: "Rs 1099",
+      image:laptop2
     },
     {
       id: 3,
-      name: "Sneakers",
-      price: "$89",
-      image:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+      name: "Apple MacBook Pro 16-inch",
+      price: "Rs 1689",
+      image:laptop9
     },
     {
       id: 4,
-      name: "Backpack",
-      price: "$65",
-      image:
-        "https://images.unsplash.com/photo-1581605405669-fcdf81165afa",
+      name: "Asus ROG Zephyrus G14 Gaming Laptop",
+      price: "RS 1499",
+      image:laptop8
     },
   ];
+
 
   return (
     <section className="py-20 bg-slate-50">
@@ -43,6 +44,8 @@ const FeatureProducts = () => {
         <p className="text-center text-gray-500 mt-4">
           Hand-picked products chosen for quality and popularity.
         </p>
+        {/* Gaming Series Banner */}
+      
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
 
@@ -74,9 +77,35 @@ const FeatureProducts = () => {
           ))}
 
         </div>
+        <div className="relative rounded-3xl overflow-hidden mb-20">
+        <img
+          src={gaming}
+          alt="Gaming Series"
+          className="w-full h-[450px] object-cover"
+        />
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40"></div>
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-center items-start px-12">
+          <h2 className="text-5xl font-bold text-white">
+            Gaming Series
+          </h2>
+
+          <p className="text-white text-xl mt-4 max-w-xl">
+            Experience next-level gaming performance with RTX-powered laptops.
+          </p>
+
+          <button className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg">
+            Explore Now
+          </button>
+        </div>
+      </div>
       </div>
     </section>
   );
 };
 
 export default FeatureProducts;
+

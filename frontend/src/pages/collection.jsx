@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import useProducts from "../hooks/useProducts";
 import ProductGrid from "../components/Product/ProductGrid";
 import FilterSidebar from "../components/FilterSidebar";
@@ -8,16 +9,17 @@ import Footer from "../components/Footer/Footer";
 const Collection = () => {
   const { products, loading } = useProducts();
 
-  // =========================
-  // FILTER STATES
-  // =========================
+  const [searchParams] = useSearchParams();
+
+  // Category from URL
+  const selectedCategory =
+    searchParams.get("category") || "";
+
+  // Filter States
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedRam, setSelectedRam] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
 
-  // =========================
-  // LOADING STATE
-  // =========================
   if (loading) {
     return (
       <>
@@ -30,19 +32,15 @@ const Collection = () => {
     );
   }
 
-  // =========================
-  // FILTER LOGIC
-  // =========================
   const filteredProducts = products.filter((product) => {
-    // Brand Filter
     const brandMatch =
-      !selectedBrand || product.brand === selectedBrand;
+      !selectedBrand ||
+      product.brand === selectedBrand;
 
-    // RAM Filter
     const ramMatch =
-      !selectedRam || product.ram === selectedRam;
+      !selectedRam ||
+      product.ram === selectedRam;
 
-    // Price Filter
     let priceMatch = true;
 
     if (selectedPrice === "0-50000") {
@@ -59,7 +57,16 @@ const Collection = () => {
       priceMatch = product.price > 200000;
     }
 
-    return brandMatch && ramMatch && priceMatch;
+    const categoryMatch =
+      !selectedCategory ||
+      product.category === selectedCategory;
+
+    return (
+      brandMatch &&
+      ramMatch &&
+      priceMatch &&
+      categoryMatch
+    );
   });
 
   return (
@@ -67,22 +74,24 @@ const Collection = () => {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        {/* PAGE HEADER */}
+
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">
-            Browse Laptops
+            {selectedCategory
+              ? `${selectedCategory} Laptops`
+              : "All Laptops"}
           </h1>
 
           <p className="text-gray-500 mt-2">
-            Find the perfect laptop based on brand,
-            specifications and budget.
+            Browse laptops based on category,
+            brand, specifications and budget.
           </p>
         </div>
 
-        {/* MAIN LAYOUT */}
         <div className="flex flex-col lg:flex-row gap-6">
 
-          {/* FILTER SIDEBAR */}
+          {/* Sidebar */}
           <div className="lg:w-64">
             <FilterSidebar
               brand={selectedBrand}
@@ -94,7 +103,7 @@ const Collection = () => {
             />
           </div>
 
-          {/* PRODUCT SECTION */}
+          {/* Products */}
           <div className="flex-1">
 
             <div className="flex justify-between items-center mb-5">
@@ -116,7 +125,7 @@ const Collection = () => {
                 </h3>
 
                 <p className="text-gray-500">
-                  Try changing your filters.
+                  No laptops found in this category.
                 </p>
               </div>
             )}
@@ -132,3 +141,4 @@ const Collection = () => {
 };
 
 export default Collection;
+

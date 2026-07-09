@@ -6,7 +6,9 @@ import Footer from "../components/Footer/Footer";
 const OrderSuccess = () => {
   const { navigate } = useShop();
 
+
   return (
+
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
 
@@ -18,14 +20,21 @@ const OrderSuccess = () => {
 
           {/* Heading */}
           <h1 className="text-3xl font-bold text-green-600 mb-3">
-            Order Confirmed!
+            ✓ Payment Successful
           </h1>
 
-          {/* Message */}
-          <p className="text-gray-600 mb-6">
-            Thank you for shopping with SmartLap Hub.
-            Your order has been placed successfully and will be processed soon.
-          </p>
+
+          {/* Order details (minimal, existing frontend flow) */}
+          <div className="bg-gray-50 border rounded-lg p-4 mb-6 text-left text-sm text-gray-700">
+            <div className="font-semibold mb-2">Payment Details</div>
+            <p><span className="font-semibold">Payment Method:</span> Stripe</p>
+            <p><span className="font-semibold">Payment Status:</span> Paid</p>
+            <p className="mt-2 text-gray-500">
+              Order number and amount are populated by the backend via webhook.
+              This page focuses on confirming payment success.
+            </p>
+          </div>
+
 
           {/* Delivery Info */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">

@@ -9,11 +9,30 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const navLinks = [
-    { name: "Laptops", href: "#laptops", active: false },
-    { name: "Accessories", href: "#accessories", active: false },
-    { name: "Gaming", href: "#gaming", active: false },
-    { name: "Deals", href: "#deals", active: false },
-    { name: "Support", href: "#support", active: false },
+    {
+      name: "Gaming",
+      onClick: () => navigate("/collection?category=Gaming"),
+    },
+    {
+      name: "Business",
+      onClick: () => navigate("/collection?category=Business"),
+    },
+    {
+      name: "Student",
+      onClick: () => navigate("/collection?category=Student"),
+    },
+    {
+      name: "Creator",
+      onClick: () => navigate("/collection?category=Creator"),
+    },
+    {
+      name: "All Laptops",
+      onClick: () => navigate("/collection"),
+    },
+    {
+      name: "Contact",
+      onClick: () => navigate("/contact"),
+    },
   ];
 
   return (
@@ -21,41 +40,37 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
         {/* Logo */}
-        <div className="flex items-center">
-          <a
-            href="/"
-            className="text-xl font-extrabold tracking-tight text-black"
-          >
-            SmartLap Hub
-          </a>
+        <div
+          onClick={() => navigate("/home")}
+          className="cursor-pointer text-xl font-extrabold tracking-tight text-black"
+        >
+          SmartLap Hub
         </div>
 
-        {/* Links */}
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8 h-full">
           {navLinks.map((link) => (
-            <a
+            <button
               key={link.name}
-              href={link.href}
-              className="text-sm font-medium text-gray-500 hover:text-black"
+              onClick={link.onClick}
+              className="text-sm font-medium text-gray-500 hover:text-black transition"
             >
               {link.name}
-            </a>
+            </button>
           ))}
         </div>
 
-        {/* Right side */}
+        {/* Right Side */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           <SearchBar />
 
-          <button className="p-2 text-gray-700 hover:text-blue-600 transition-colors">
+          <button className="p-2 text-gray-700 hover:text-blue-600">
             <Heart className="w-5 h-5" />
           </button>
 
-          {/* ✅ CART FIX HERE */}
           <button
             onClick={() => navigate("/cart")}
-            className="p-2 text-gray-700 hover:text-blue-600 transition-colors relative"
-            aria-label="Cart"
+            className="p-2 text-gray-700 hover:text-blue-600"
           >
             <ShoppingCart className="w-5 h-5" />
           </button>

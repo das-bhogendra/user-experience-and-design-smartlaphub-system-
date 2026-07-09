@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import AuthShell from "../../pages/AuthShell";
 
 const RegisterForm = () => {
   const { register } = useAuth();
@@ -14,6 +15,7 @@ const RegisterForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const nameLabel = useMemo(() => "Full Name", []);
   const emailLabel = useMemo(() => "Email", []);
@@ -38,7 +40,6 @@ const RegisterForm = () => {
       await register(form);
       navigate("/login");
     } catch (err) {
-      // Try to show backend error message if available
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
@@ -48,18 +49,19 @@ const RegisterForm = () => {
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
-    <div style={{ maxWidth: 420, margin: "0 auto" }}>
-      <h2>Register</h2>
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label>
-            <div>{nameLabel}</div>
+    <AuthShell
+      title="Create account"
+      subtitle="Join SmartLap Hub to get the best deals."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label className="block">
+            <div className="text-sm font-medium text-slate-800 mb-1">{nameLabel}</div>
             <input
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
               name="name"
               placeholder="Enter your name"
               onChange={handleChange}
@@ -67,10 +69,13 @@ const RegisterForm = () => {
               autoComplete="name"
             />
           </label>
+        </div>
 
-          <label>
-            <div>{emailLabel}</div>
+        <div className="space-y-2">
+          <label className="block">
+            <div className="text-sm font-medium text-slate-800 mb-1">{emailLabel}</div>
             <input
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
               name="email"
               placeholder="Enter your email"
               onChange={handleChange}
@@ -78,49 +83,62 @@ const RegisterForm = () => {
               autoComplete="email"
             />
           </label>
+        </div>
 
-          <label>
-            <div>{passwordLabel}</div>
-            <input
-              name="password"
-              type="password"
-              placeholder="Create a password"
-              onChange={handleChange}
-              value={form.password}
-              autoComplete="new-password"
-            />
+        <div className="space-y-2">
+          <label className="block">
+            <div className="text-sm font-medium text-slate-800 mb-1">{passwordLabel}</div>
+            <div className="relative">
+              <input
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password"
+                onChange={handleChange}
+                value={form.password}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </label>
+        </div>
 
-          {error ? (
-            <div style={{ color: "crimson", fontSize: 14 }}>{error}</div>
-          ) : null}
-
-          <button type="submit" disabled={loading} style={{ marginTop: 8 }}>
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
-
-          <div style={{ marginTop: 14, fontSize: 14 }}>
-            Already have an account?{" "}
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              style={{
-                border: "none",
-                background: "transparent",
-                padding: 0,
-                color: "#2563eb",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              Login
-            </button>
+        {error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
           </div>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white font-semibold tracking-wide transition hover:bg-slate-800 disabled:opacity-60 disabled:hover:bg-slate-900"
+        >
+          {loading ? "Creating account..." : "Create Account"}
+        </button>
+
+        <div className="pt-2 text-center text-sm text-slate-600">
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="font-semibold text-slate-900 hover:underline"
+          >
+            Login
+          </button>
         </div>
       </form>
-    </div>
+    </AuthShell>
   );
 };
 
 export default RegisterForm;
+
 
