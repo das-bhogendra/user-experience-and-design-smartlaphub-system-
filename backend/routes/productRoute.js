@@ -22,7 +22,18 @@ productRouter.post(
   addProduct
 );
 productRouter.post("/remove", adminAuth, removeProduct);
-productRouter.post("/single", adminAuth, singleProduct);
+// Public GET for product details: /api/product/single/:id
+productRouter.get("/single/:id", singleProduct);
+
+// TEMP test route to verify router is mounted
+productRouter.get("/test", (req, res) => {
+  return res.status(200).json({ success: true, message: "TEST ROUTE HIT" });
+});
+
+
+// Admin routes (legacy/optional)
+// Note: Do NOT protect this route; frontend is using GET for product details.
+productRouter.post("/single", singleProduct);
 productRouter.get("/list", listProducts);
 
 export default productRouter;

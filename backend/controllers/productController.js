@@ -7,6 +7,7 @@ const addProduct = async (req, res) => {
       name,
       description,
       price,
+      category,
       brand,
       processor,
       ram,
@@ -16,6 +17,9 @@ const addProduct = async (req, res) => {
       stock,
       bestseller,
     } = req.body;
+
+    console.log("REQ BODY:", req.body);
+    console.log("CATEGORY RECEIVED:", req.body.category);
 
     const image1 = req.files.image1 && req.files.image1[0];
     const image2 = req.files.image2 && req.files.image2[0];
@@ -40,7 +44,7 @@ const addProduct = async (req, res) => {
       name,
       description,
       price: Number(price),
-
+      category,
       brand,
       processor,
       ram,
@@ -49,6 +53,9 @@ const addProduct = async (req, res) => {
       screenSize,
 
       stock: Number(stock),
+
+      // Category selected in admin form (Gaming/Business/Student/Creator)
+      category,
 
       bestseller: bestseller === "true",
 
@@ -109,10 +116,21 @@ const removeProduct = async (req, res) => {
 // function for getting single product info
 const singleProduct = async (req, res) => {
   try {
-    const { productId } = req.body;
+    // Support both:
+    // 1) GET /api/product/single/:id
+    // 2) (legacy) POST /api/product/single with { productId }
+    const productId = req.params?.id || req.body?.productId;
+
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product id is required",
+      });
+    }
+
     const product = await productModel.findById(productId);
 
-    res.json({
+    return res.json({
       success: true,
       product,
     });

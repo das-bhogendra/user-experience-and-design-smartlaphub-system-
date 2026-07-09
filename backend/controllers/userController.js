@@ -22,7 +22,7 @@ const loginUser = async (req, res) => {
     if (!user) {
       return res.json({
         success: false,
-        message: "User doesn't exist",
+        message: "Invalid email or password.",
       });
     }
 
@@ -31,9 +31,10 @@ const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.json({
         success: false,
-        message: "Invalid Credentials",
+        message: "Invalid email or password.",
       });
     }
+
 
     const token = createToken(user._id);
 
