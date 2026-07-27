@@ -1,4 +1,5 @@
 import userModel from "../models/userModel.js";
+import orderModel from "../models/orderModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -153,4 +154,73 @@ const adminLogin = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, adminLogin };
+// Get User Profile
+const getProfile = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await userModel
+      .findById(userId)
+      .select("-password");
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const orders = await orderModel
+      .find({ userId })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      user,
+      orders,
+    });
+
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Update User Profile
+const updateProfile = async (req, res) => {
+  try {
+    const { userId, name, phone, address } = req.body;
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.name = name || user.name;
+    user.phone = phone || user.phone;
+    user.address = address || user.address;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user,
+    });
+
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { loginUser, registerUser, adminLogin, getProfile,updateProfile, };
+
