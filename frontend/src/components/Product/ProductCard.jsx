@@ -18,38 +18,62 @@ const ProductCard = ({ product }) => {
   return (
     <Link
       to={`/product/${product._id}`}
-      className="border rounded-lg p-4 shadow hover:shadow-lg transition flex flex-col bg-white"
+      className="group border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col bg-white overflow-hidden"
     >
       {/* ================= IMAGE ================= */}
-      <img
-        src={
-          Array.isArray(product.image)
-            ? product.image[0]
-            : product.image
-        }
-        alt={product.name}
-        className="w-full h-48 object-cover rounded"
-      />
+      <div className="relative overflow-hidden rounded-lg mb-3">
+        <img
+          src={
+            Array.isArray(product.image)
+              ? product.image[0]
+              : product.image
+          }
+          alt={product.name}
+          className="w-full h-52 object-cover rounded-lg transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 rounded-lg" />
+      </div>
+
+      {/* ================= BRAND BADGE ================= */}
+      {product.brand && (
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+          {product.brand}
+        </span>
+      )}
 
       {/* ================= NAME ================= */}
-      <h2 className="font-semibold mt-2 text-lg">
+      <h2 className="font-semibold text-gray-800 leading-snug line-clamp-2 mb-1">
         {product.name}
       </h2>
 
-      {/* ================= BRAND ================= */}
-      <p className="text-gray-600 text-sm">
-        {product.brand}
-      </p>
+      {/* ================= SPECS SUMMARY ================= */}
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {product.processor && (
+          <span className="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full border border-gray-100">
+            {product.processor.split(" ").slice(0, 2).join(" ")}
+          </span>
+        )}
+        {product.ram && (
+          <span className="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full border border-gray-100">
+            {product.ram}
+          </span>
+        )}
+        {product.storage && (
+          <span className="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full border border-gray-100">
+            {product.storage}
+          </span>
+        )}
+      </div>
 
       {/* ================= PRICE ================= */}
-      <p className="font-bold text-black mt-1">
-        Rs. {product.price}
+      <p className="font-bold text-lg text-gray-900 mt-auto mb-3">
+        NPR {Number(product.price).toLocaleString()}
       </p>
 
       {/* ================= ADD TO CART BUTTON ================= */}
       <button
         onClick={handleAddToCart}
-        className="mt-auto bg-black text-white py-2 rounded hover:bg-gray-800 transition"
+        className="w-full bg-black text-white py-2.5 rounded-lg font-medium text-sm tracking-wide hover:bg-gray-800 transition-all duration-200 active:scale-[0.98]"
       >
         Add to Cart
       </button>

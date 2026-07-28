@@ -39,6 +39,7 @@ const Checkout = () => {
 
   // Payment Method State
   // 'cod' for Cash on Delivery, 'card' for Stripe Debit/Credit
+  // 'esewa' for eSewa, 'khalti' for Khalti (UI-only, coming soon)
   const [paymentMethod, setPaymentMethod] = useState("cod");
 
   // Card details UI is intentionally not implemented here because Stripe is handled
@@ -182,29 +183,34 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col justify-between">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto w-full px-4 py-8 flex-grow">
+      <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-grow">
         {/* Progress Tracker Steps */}
-        <div className="flex items-center justify-center max-w-xl mx-auto mb-10 relative">
-          <div className="absolute top-4 left-0 right-0 h-0.5 bg-blue-100 -z-10" />
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm shadow">1</div>
-            <span className="text-xs font-bold mt-1 text-black">Shipping</span>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-400 flex items-center justify-center font-bold text-sm">2</div>
-            <span className="text-xs font-medium mt-1 text-slate-400">Delivery</span>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-400 flex items-center justify-center font-bold text-sm">3</div>
-            <span className="text-xs font-medium mt-1 text-slate-400">Payment</span>
-          </div>
-          <div className="flex flex-col items-center flex-1">
-            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-400 flex items-center justify-center font-bold text-sm">4</div>
-            <span className="text-xs font-medium mt-1 text-slate-400">Review</span>
-          </div>
+        <div className="flex items-center justify-center max-w-2xl mx-auto mb-10 relative">
+          <div className="absolute top-5 left-[12.5%] right-[12.5%] h-0.5 bg-gray-200" />
+          {[
+            { num: "1", label: "Shipping", active: true },
+            { num: "2", label: "Delivery", active: false },
+            { num: "3", label: "Payment", active: false },
+            { num: "4", label: "Review", active: false },
+          ].map((step, idx) => (
+            <div key={idx} className="flex flex-col items-center flex-1 relative z-10">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm transition-all duration-200 ${
+                step.active
+                  ? "bg-gray-900 text-white ring-4 ring-gray-100"
+                  : "bg-white text-gray-400 border-2 border-gray-200"
+              }`}>
+                {step.num}
+              </div>
+              <span className={`text-xs font-medium mt-1.5 ${
+                step.active ? "text-gray-900 font-semibold" : "text-gray-400"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          ))}
         </div>
 
         {/* Main Grid Checkout content */}
@@ -212,239 +218,277 @@ const Checkout = () => {
           {/* Left Columns - Address & Payment Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Shipping Address Container */}
-            <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
-              <h2 className="text-lg font-bold flex items-center gap-2 mb-6">
-                <span className="text-sm">🚚</span> Shipping Address
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-6">
+                <span className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base">🚚</span>
+                Shipping Address
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">First Name</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 uppercase tracking-wider">First Name</label>
                   <input
                     type="text"
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
+                    className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none text-sm transition-all duration-200"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Last Name</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 uppercase tracking-wider">Last Name</label>
                   <input
                     type="text"
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
+                    className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none text-sm transition-all duration-200"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Street Address</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 uppercase tracking-wider">Street Address</label>
                   <input
                     type="text"
                     name="streetAddress"
                     value={formData.streetAddress}
                     onChange={handleInputChange}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
+                    className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none text-sm transition-all duration-200"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">City</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 uppercase tracking-wider">City</label>
                   <input
                     type="text"
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
+                    className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none text-sm transition-all duration-200"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Phone Number</label>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1.5 uppercase tracking-wider">Phone Number</label>
                   <input
                     type="text"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50/50 focus:outline-blue-500 text-sm"
+                    className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-gray-400 focus:ring-2 focus:ring-gray-100 outline-none text-sm transition-all duration-200"
                   />
                 </div>
               </div>
             </div>
 
             {/* Payment Method Container */}
-            <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm">
-              <h2 className="text-lg font-bold flex items-center gap-2 mb-6">
-                <span className="text-sm">💳</span> Payment Method
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3 mb-6">
+                <span className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base">💳</span>
+                Payment Method
               </h2>
 
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("cod")}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all ${
+                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 ${
                     paymentMethod === "cod"
-                      ? "border-black bg-black/5 text-black ring-1 ring-black"
-                      : "border-slate-200 hover:bg-slate-50"
+                      ? "border-gray-900 bg-gray-50 text-gray-900 shadow-sm"
+                      : "border-gray-100 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <span className="text-lg mb-1">💵</span>
+                  <span className="text-2xl mb-2">💵</span>
                   Cash on Delivery
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("card")}
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-bold transition-all ${
+                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 ${
                     paymentMethod === "card"
-                      ? "border-blue-600 bg-blue-50/50 text-blue-600 ring-1 ring-blue-500"
-                      : "border-slate-200 hover:bg-slate-50"
+                      ? "border-gray-900 bg-gray-50 text-gray-900 shadow-sm"
+                      : "border-gray-100 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <span className="text-lg mb-1">💳</span>
+                  <span className="text-2xl mb-2">💳</span>
                   Debit/Credit Card (Stripe)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("esewa")}
+                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 ${
+                    paymentMethod === "esewa"
+                      ? "border-gray-900 bg-gray-50 text-gray-900 shadow-sm"
+                      : "border-gray-100 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="text-2xl mb-2 font-bold text-green-600">eSewa</span>
+                  <span className="text-[10px] text-gray-400 font-normal mt-0.5">Coming Soon</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("khalti")}
+                  className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 text-sm font-semibold transition-all duration-200 ${
+                    paymentMethod === "khalti"
+                      ? "border-gray-900 bg-gray-50 text-gray-900 shadow-sm"
+                      : "border-gray-100 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="text-2xl mb-2 font-bold text-purple-600">Khalti</span>
+                  <span className="text-[10px] text-gray-400 font-normal mt-0.5">Coming Soon</span>
                 </button>
               </div>
 
-              {paymentMethod === "card" ? (
-                <div className="border-t border-slate-100 pt-6 text-center py-4 text-sm text-slate-700">
-                  Your payment will be securely processed by Stripe.
+              <div className="border-t border-gray-100 pt-5">
+                <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-5 py-4">
+                  <span className="text-lg">
+                    {paymentMethod === "card" ? "🔒" : 
+                     paymentMethod === "esewa" ? "⏳" :
+                     paymentMethod === "khalti" ? "⏳" : "💵"}
+                  </span>
+                  <p className="text-sm text-gray-600">
+                    {paymentMethod === "card"
+                      ? "Your payment will be securely processed by Stripe. No card details are stored on our servers."
+                      : paymentMethod === "esewa"
+                        ? "eSewa integration will be available soon."
+                        : paymentMethod === "khalti"
+                          ? "Khalti integration will be available soon."
+                          : "Pay with cash when your order arrives. No online payment needed."}
+                  </p>
                 </div>
-              ) : (
-                <div className="border-t border-slate-100 pt-6 text-center py-4 text-sm text-slate-500">
-                  Pay with cash when your order arrives.
-                </div>
-              )}
+              </div>
             </div>
 
-            <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex gap-3 text-xs text-blue-700">
-              <span className="text-sm mt-0.5">🛡️</span>
+            {/* Security Notice */}
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex gap-4 text-sm text-gray-600">
+              <span className="text-xl flex-shrink-0">🛡️</span>
               <p>Your payment information is processed securely with 256-bit SSL encryption. We never store your full card details.</p>
             </div>
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="bg-white rounded-xl border border-slate-100 p-6 shadow-sm space-y-6">
-            <h2 className="text-lg font-bold">Order Summary</h2>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow duration-200 sticky top-24">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <span className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base">📋</span>
+                Order Summary
+              </h2>
 
-            <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
+              {/* Cart Items */}
+              <div className="space-y-4 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                {cartItemsArray.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <p className="text-lg mb-1">🛒</p>
+                    <p className="text-sm font-medium">Your cart is empty</p>
+                  </div>
+                ) : (
+                  cartItemsArray.map(({ productId, quantity }) => {
+                    const item = allProducts?.find((p) => p._id === productId);
 
-              {cartItemsArray.length === 0 ? (
-                <p className="text-center text-gray-500">Your cart is empty.</p>
-              ) : (
-                cartItemsArray.map(({ productId, quantity }) => {
-                  const item = allProducts?.find((p) => p._id === productId);
+                    if (!item) return null;
 
-                  if (!item) return null;
+                    const qty = quantity;
+                    const itemTotal = item.price * qty;
 
-                  const qty = quantity;
-                  const itemTotal = item.price * qty;
-
-                  return (
-                    <div
-                      key={item._id}
-                      className="border rounded-xl p-3 bg-gray-50"
-                    >
-                      <div className="flex gap-3">
-                        <img
-                          src={item.image?.[0]}
-                          alt={item.name}
-                          className="w-24 h-24 rounded-lg object-cover border"
-                        />
-
-                        <div className="flex-1">
-                          <h3 className="font-bold text-sm">{item.name}</h3>
-
-                          <p className="text-xs text-gray-500">Brand: {item.brand}</p>
-                          <p className="text-xs text-gray-500">Category: {item.category}</p>
-                          <p className="text-xs text-gray-500">Processor: {item.processor}</p>
-                          <p className="text-xs text-gray-500">RAM: {item.ram}</p>
-                          <p className="text-xs text-gray-500">Storage: {item.storage}</p>
-
-                          {item.graphics && (
-                            <p className="text-xs text-gray-500">
-                              Graphics: {item.graphics}
-                            </p>
-                          )}
-
-                          <p className="text-xs text-gray-500">Screen: {item.screenSize}</p>
-
-                          <hr className="my-2" />
-
-                          <div className="flex justify-between text-sm">
-                            <span>Unit Price</span>
-                            <span>NPR {item.price.toLocaleString()}</span>
+                    return (
+                      <div
+                        key={item._id}
+                        className="border border-gray-100 rounded-xl p-4 bg-gray-50 hover:bg-white transition-colors duration-200"
+                      >
+                        <div className="flex gap-3">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+                            <img
+                              src={item.image?.[0]}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
 
-                          <div className="flex justify-between text-sm">
-                            <span>Quantity</span>
-                            <span>{qty}</span>
-                          </div>
-
-                          <div className="flex justify-between font-bold text-blue-600 mt-2">
-                            <span>Item Total</span>
-                            <span>NPR {itemTotal.toLocaleString()}</span>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm text-gray-900 truncate">{item.name}</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">{item.brand}</p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-gray-500">Qty: {qty}</span>
+                              <span className="font-bold text-sm text-gray-900">NPR {itemTotal.toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+              </div>
 
-            {/* Price Line Breakdown */}
-            <div className="border-t border-slate-100 pt-4 space-y-2.5 text-sm">
-              <div className="flex justify-between text-slate-500 font-medium">
-                <span>Subtotal</span>
-                <span className="text-slate-800 font-semibold">NPR {subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-slate-500 font-medium">
-                <span>Shipping Fee</span>
-                <span className="text-slate-800 font-semibold">NPR {shippingFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-slate-500 font-medium">
-                <span>Tax (VAT 13%)</span>
-                <span className="text-slate-800 font-semibold">NPR {tax.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between pt-3 border-t border-slate-100 items-baseline">
-                <span className="text-base font-bold text-slate-800">Total</span>
-                <span className="text-xl font-extrabold text-slate-900">NPR {grandTotal.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3 pt-2">
-              {errorMessage ? (
-                <div className="w-full bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
-                  {errorMessage}
+              {/* Price Line Breakdown */}
+              <div className="mt-6 pt-5 border-t border-gray-100 space-y-3 text-sm">
+                <div className="flex justify-between text-gray-500">
+                  <span>Subtotal</span>
+                  <span className="text-gray-900 font-medium">NPR {subtotal.toLocaleString()}</span>
                 </div>
-              ) : null}
+                <div className="flex justify-between text-gray-500">
+                  <span>Shipping Fee</span>
+                  <span className="text-gray-900 font-medium">NPR {shippingFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Tax (VAT 13%)</span>
+                  <span className="text-gray-900 font-medium">NPR {tax.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-gray-100">
+                  <span className="text-base font-bold text-gray-900">Total</span>
+                  <span className="text-xl font-extrabold text-gray-900">NPR {grandTotal.toLocaleString()}</span>
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={placeOrder}
-                disabled={loading}
-                className={`w-full bg-black text-white py-3 rounded-xl font-bold text-sm tracking-wide transition shadow-sm ${
-                  loading ? "opacity-60 cursor-not-allowed hover:bg-black" : "hover:bg-slate-800"
-                }`}
-              >
-                {loading ? "Processing..." : paymentMethod === "card" ? "Pay Now with Stripe" : "Place Order (COD)"}
-              </button>
+              {/* Action Buttons */}
+              <div className="mt-6 space-y-3">
+                {errorMessage && (
+                  <div className="bg-red-50 border border-red-100 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
 
-              <button
-                type="button"
-                onClick={() => navigate("/cart")}
-                className="w-full bg-white text-blue-600 border border-blue-200 py-2.5 rounded-xl font-bold text-sm transition hover:bg-slate-50"
-              >
-                Return to Cart
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={placeOrder}
+                  disabled={loading}
+                  className={`w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold text-sm tracking-wide shadow-sm transition-all duration-200 ${
+                    loading
+                      ? "opacity-60 cursor-not-allowed"
+                      : "hover:bg-black hover:shadow-md active:scale-[0.98]"
+                  }`}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    paymentMethod === "card" ? "Pay Now with Stripe" : "Place Order (COD)"
+                  )}
+                </button>
 
-            <div className="flex justify-center items-center gap-4 text-slate-400 text-xs pt-2">
-              <span>🛡️ Secure</span>
-              <span>•</span>
-              <span>🔒 Verified</span>
-              <span>•</span>
-              <span>⚙️ Encrypted</span>
+                <button
+                  type="button"
+                  onClick={() => navigate("/cart")}
+                  className="w-full border-2 border-gray-200 text-gray-700 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 active:scale-[0.98]"
+                >
+                  Return to Cart
+                </button>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="mt-6 pt-5 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+                  <span className="flex items-center gap-1">🛡️ Secure</span>
+                  <span className="text-gray-200">•</span>
+                  <span className="flex items-center gap-1">🔒 Verified</span>
+                  <span className="text-gray-200">•</span>
+                  <span className="flex items-center gap-1">⚙️ Encrypted</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

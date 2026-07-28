@@ -1,12 +1,20 @@
 import React from "react";
 import { Heart, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useShop } from "../../contexts/ShopContext";
 import SearchBar from "./SearchBar";
 import ProfileDrop from "./ProfileDropdown";
 import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { cart } = useShop();
+
+  // Calculate total quantity from cart object { productId: quantity }
+  const cartCount = Object.values(cart || {}).reduce(
+    (total, qty) => total + qty,
+    0
+  );
 
   const navLinks = [
     {
@@ -70,9 +78,14 @@ export default function Navbar() {
 
           <button
             onClick={() => navigate("/cart")}
-            className="p-2 text-gray-700 hover:text-blue-600"
+            className="relative p-2 text-gray-700 hover:text-blue-600"
           >
             <ShoppingCart className="w-5 h-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-gray-900 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 leading-none shadow-sm">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </button>
 
           <ProfileDrop />

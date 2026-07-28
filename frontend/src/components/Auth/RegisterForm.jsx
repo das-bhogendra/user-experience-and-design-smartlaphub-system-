@@ -11,15 +11,18 @@ const RegisterForm = () => {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const nameLabel = useMemo(() => "Full Name", []);
   const emailLabel = useMemo(() => "Email", []);
   const passwordLabel = useMemo(() => "Password", []);
+  const confirmPasswordLabel = useMemo(() => "Confirm Password", []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,8 +33,13 @@ const RegisterForm = () => {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setError("Please fill all fields.");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
@@ -105,6 +113,31 @@ const RegisterForm = () => {
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </label>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block">
+            <div className="text-sm font-medium text-slate-800 mb-1">{confirmPasswordLabel}</div>
+            <div className="relative">
+              <input
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-900/10"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm your password"
+                onChange={handleChange}
+                value={form.confirmPassword}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 transition"
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
               </button>
             </div>
           </label>
