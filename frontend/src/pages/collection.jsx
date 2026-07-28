@@ -133,7 +133,7 @@ const Collection = () => {
               <div className="bg-white border border-gray-100 rounded-xl p-12 text-center shadow-sm">
                 <div className="text-5xl mb-4">🔍</div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  No Products Found
+                  product is not available for the selected filters
                 </h3>
 
                 <p className="text-gray-500">
