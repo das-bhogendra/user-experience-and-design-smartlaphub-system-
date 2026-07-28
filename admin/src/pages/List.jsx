@@ -6,7 +6,23 @@ import { toast } from "react-toastify";
 const List = ({ token }) => {
   const [list, setList] = useState([]);
 
-  
+  // ================= FETCH PRODUCTS =================
+  const fetchList = async () => {
+    try {
+      const response = await axios.get(
+        backendUrl + "/api/product/list"
+      );
+
+      if (response.data.success) {
+        setList(response.data.products);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
 
   // ================= REMOVE PRODUCT =================
   const removeProduct = async (id) => {
