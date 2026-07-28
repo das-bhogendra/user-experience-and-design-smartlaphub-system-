@@ -61,10 +61,10 @@ export default function ProfileDropdown() {
                 </button>
 
                 <button
-                  onClick={() => handleNavigate("/orders")}
+                  onClick={() => handleNavigate("/my-orders")}
                   className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                 >
-                  Orders
+                 My Orders
                 </button>
 
                 <hr className="my-1" />

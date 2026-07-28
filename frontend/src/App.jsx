@@ -13,6 +13,7 @@ import OrderTracking from "./pages/OrderTracking";
 import ProductDetails from "./pages/ProductDetails";
 import VerifyStripe from "./pages/VerifyStripe";
 import Contact from "./pages/Contact";
+import Profile from "./pages/Profile";
 
 
 const App = () => {
@@ -37,6 +38,7 @@ const App = () => {
 
       <Route path="/confirm" element={<OrderSuccess />} />
       <Route path="/my-orders" element={<MyOrders />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/order/:id" element={<OrderTracking />} />
     </Routes>
   );
